@@ -21,11 +21,11 @@ void showHEX(const byte B){
  * Pulse is held low for 200ms
 */
 void Avrdude::ResetExtDevice() {
-  pinMode(21, OUTPUT);
-  digitalWrite(21, LOW);
+  pinMode(5, OUTPUT);
+  digitalWrite(5, LOW);
   delayMicroseconds(200);
-  digitalWrite(21, HIGH);
-  pinMode(21, INPUT);
+  digitalWrite(5, HIGH);
+  pinMode(5, INPUT);
 }
 
 /*

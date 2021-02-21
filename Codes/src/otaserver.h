@@ -1,9 +1,151 @@
 #ifndef __OTA_SERVER_H__
 #define __OTA_SERVER_H__
 
-String start = "<!doctype html> <html> <head> <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\"> <meta charset=\"UTF-8\"> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"> <title>FYP: SmartBin</title> ";
-String style = "<style> * { box-sizing: border-box; position: relative; }html,body{ width:100%; position: relative; margin: 0; padding: 0; text-align:center; font-family: 'Poppins'; overflow: auto; background: #333; min-width: 380px !important; }.container{ font-family: 'Poppins'; position: relative; width:100%; min-height: 100vh; top:0;left:0; background: #333; text-align: center; z-index: 2; }.loginWrapper{ min-width:350px; padding:20px 50px; background: #fff; border-radius: 10px; display: inline-flex; position: absolute; top:50%;left:50%; transform:translate(-50%,-50%); } .loginWrapper h1{ margin-bottom: 10px; user-select: none; color:#777; }.pinContainer{ display: block; width:100%; margin-top:20px; }#file-input { display: block; border: 1px solid #bbb; padding: 10px; border-radius: 5px; text-align: left; color: #aaa; width: 100%; cursor: pointer; transition: all 0.5s; } #file-input:hover { border-color: #777; color: #777; } .btn{ background:#3498db; color:#fff; padding:15px 10px; width:100%; border-radius: 5px; margin-top:15px; font-size:18px; font-weight:bold; transition:all 0.5s; border:none; outline: none; cursor: pointer; } .btn:hover{ background:rgba(52, 152, 219, 0.8); } .btn:disabled{ cursor: not-allowed; } #prg{ font-size:15px; color:#777; user-select: none; margin-bottom:7px; } #bar,#prgbar{ background-color:#f1f1f1; border-radius:10px } #bar{ background-color:#3498db; width:0%; height:10px } .svg_container svg{ width:100px; height:90px; }.window { display: none; width:80%; min-width:380px; padding:0px 30px; background: #fff; border-radius: 10px; position: absolute; top:50%;left:50%; transform:translate(-50%,-50%); z-index: 5; box-shadow: 0px 0px 20px 0px rgba(0,0,0,0.5); }.consoleWindow{ background: #000; width:100%; color: #fff; display: block; text-align: left; padding: 10px; margin-bottom: 1.5em; font-size: 15px; font-family: consolas; overflow-x: auto; } .con_info{ margin: 10px; } .ckere { cursor: pointer; font-weight: bold; transition: all 0.5s; } .ckere:hover { text-decoration: underline; } @media(max-width:650px){ .loginWrapper{padding:20px;} .window{ padding:0px 18px;} } </style> </head>";
-String body = " <body> <div class=\"container\"> <div class=\"loginWrapper\"> <div style=\"position: relative;margin: auto;width: 100%;\"> <div class=\"svg_container\">\
+#include<Arduino.h>
+#include<stdint.h>
+
+class SBSession{
+  String SessionKeys[10] = {"eTL6mxjVE5uj35JtIvjwqMwxkf", "bzOV8kY4L8zAvhIKGOEp99MMxY", "SBmnE2C1tNwrLv4qX7QD3Sz2Rv", "HZTI7WAlGblxE2zDwo7UxFAtP1", "69ZHCSxAI0duiP1skerlklNVuL", 
+                            "1f2DWFGp5WFh7f41umrJJPXRZu", "aQnOJ9z1QSV6bHloSDH1TMO84b", "WLfm7BqahusbpK90kBraC6n2U6", "LNiz7znfFyFtgxYY9StExUrKdU", "bD2HmNNlxbn07M8TJxm7fpiWaH"};
+  int randSessionIndex;
+
+  public:
+    void genKey();
+    String getKey(String);
+};
+
+void SBSession::genKey(){
+   randSessionIndex = (int)random(0,10);
+}
+
+
+String SBSession::getKey(String payload){
+  String hashStr = SessionKeys[randSessionIndex];
+  int append = strlen(payload.c_str()) % 256;
+  char hex[3];
+  sprintf(hex,"%02X",append);
+  hashStr = "$2a$10$"+hashStr+"/"+hex;
+  return hashStr;
+}
+
+String style = "<style>\n\
+                  * {\n\
+                      box-sizing: border-box;position: relative;\n\
+                  }\n\
+                  html,body{\n\
+                      width:100%;position: relative;margin: 0;padding: 0;\n\
+                      text-align:center;font-family: 'Poppins';overflow: auto;\n\
+                      background: #333;min-width: 380px !important;\n\
+                  }\n\
+                  .container{\n\
+                      font-family: 'Poppins';position: relative;\n\
+                      width:100%;background: #333;text-align: center;\n\
+                      z-index: 2;display: flex;padding:15px;justify-content: center;\n\
+                  }\n\
+                  .loginWrapper{\n\
+                      min-width:350px;padding:20px 50px;background: #fff;\n\
+                      border-radius: 10px;margin:50px 15px;margin-top: 0;\n\
+                      max-width:500px;flex: 50%;\n\
+                  }\n\
+                  .loginWrapper h2{\n\
+                      margin-bottom: 10px;user-select: none;color:#777;\n\
+                  }\n\
+                  .pinContainer{\n\
+                      display: block;width:100%;margin-top:20px;\n\
+                      margin-left: auto;margin-right: auto;text-align: left;\n\
+                  }\n\
+                  .pinContainer div h4{\n\
+                      margin:0 !important;\n\
+                  }\n\
+                  #file-input {\n\
+                      display: block;border: 1px solid #bbb;\n\
+                      padding: 10px;border-radius: 5px;\n\
+                      text-align: left;color: #aaa;width: 100%;\n\
+                      cursor: pointer;transition: all 0.5s;\n\
+                  }\n\
+                  #file-input:hover {\n\
+                      border-color: #777;color: #777;\n\
+                  }\n\
+                  input[type=\"text\"],input[type=\"password\"] {\n\
+                      display: block;border: 1px solid #bbb;padding: 10px;\n\
+                      border-radius: 5px;text-align: left;color: #aaa;\n\
+                      width: 100%;transition: all 0.5s;font-size: 18px;\n\
+                      outline: none;margin-bottom: 10px;\n\
+                  }\n\
+                  input[type=\"text\"]:hover,input[type=\"password\"]:hover {\n\
+                      border-color: #777;color: #777;\n\
+                  }\n\
+                  input[type=\"text\"]:focus,input[type=\"password\"]:focus {\n\
+                      border-color: #3498db;border-width: 2px;\n\
+                  }\n\
+                  .btn{\n\
+                      background:#3498db;color:#fff;padding:15px 10px;\n\
+                      width:100%;border-radius: 5px;margin-top:15px;font-size:18px;\n\
+                      font-weight:bold;transition:all 0.5s;border:none;\n\
+                      outline: none;cursor: pointer;\n\
+                  }\n\
+                  .btn:hover{\n\
+                      background:rgba(52, 152, 219, 0.8);\n\
+                  }\n\
+                  .btn:disabled{\n\
+                      cursor: not-allowed;\n\
+                  }\n\
+                  #prg{\n\
+                      font-size:15px;color:#777;user-select: none;margin-bottom:7px;text-align:center\n\
+                  }\n\
+                  #bar,#prgbar{\n\
+                      background-color:#f1f1f1;\n\
+                      border-radius:10px\n\
+                  }\n\
+                  #bar{\n\
+                      background-color:#3498db;\n\
+                      width:0%;height:10px\n\
+                  }\n\
+                  .svg_container svg{\n\
+                      width:100px;\n\
+                      height:90px;\n\
+                  }\n\
+                  .window {\n\
+                      display: none;width:80%;min-width:380px;\n\
+                      padding:0px 30px;background: #fff;\n\
+                      border-radius: 10px;position: absolute;\n\
+                      top:50%;left:50%;transform:translate(-50%,-50%);\n\
+                      z-index: 5;box-shadow: 0px 0px 20px 0px rgba(0,0,0,0.5);\n\
+                  }\n\
+                  .consoleWindow{\n\
+                      background: #000;width:100%;\n\
+                      color: #fff;display: block;\n\
+                      text-align: left;padding: 10px;\n\
+                      margin-bottom: 1.5em;font-size: 15px;\n\
+                      font-family: consolas;overflow-x: auto;\n\
+                  }\n\
+                  .con_info{\n\
+                      margin: 10px;\n\
+                  }\n\
+                  .ckere {\n\
+                      cursor: pointer;font-weight: bold;transition: all 0.5s;\n\
+                  }\n\
+                  .ckere:hover {\n\
+                      text-decoration: underline;\n\
+                  }\n\
+                  @media(max-width:765px){\n\
+                      .container{flex-direction:column;}\n\
+                      .loginWrapper{margin-left:auto !important;margin-right:auto !important;}\n\
+                  }\n\
+                  @media(max-width:650px){\n\
+                      .loginWrapper{padding:20px;}\n\
+                      .window{ padding:0px 18px;}\n\
+                  }\n\
+              </style>\n\
+            </head>";
+String body = " <body> \n\
+  <div style=\"padding:10px 50px\">\n\
+    <a href=\"/login?LOGOUT=YES\">\n\
+        <input type=\"submit\" class=\"btn\" value=\"Log Out\" style=\"width:150px\">\n\
+    </a>\n\
+  </div>\n\
+  <hr><br>\n\
+  <div class=\"container\"> <div class=\"loginWrapper\"> <div style=\"position: relative;margin: auto;width: 100%;\"> <div class=\"svg_container\">\
   <svg version=\"1.0\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 512.000000 512.000000\" preserveAspectRatio=\"xMidYMid meet\">\
     <g transform=\"translate(0.000000,512.000000) scale(0.100000,-0.100000)\" fill=\"#777\" stroke=\"none\">\
       <path d=\"M1504 4950 c-12 -4 -31 -21 -43 -36 -20 -26 -21 -35 -21 -351 l0\
@@ -63,10 +205,48 @@ String body = " <body> <div class=\"container\"> <div class=\"loginWrapper\"> <d
       67 -101 97 -161 60z\"/>\
     </g>\
   </svg>\
-  </div> <div style=\"display: block;width:100%\"><h1>SmartBin</h1></div> <div class=\"pinContainer\"> <form method=\"POST\" action=\"\" enctype=\"multipart/form-data\" id=\"upload_form\"> <input type=\"file\" name=\"update\" id=\"file\" onchange=\"sub(this)\" style=\"display:none\"> <label id=\"file-input\" for=\"file\"> Choose file...</label> <input type=\"submit\" class=\"btn\" id=\"btn\" value=\"Upload\" disabled> <br><br> <div id=\"prg\"></div> <div id=\"prgbar\"> <div id=\"bar\"></div> </div> </form> </div> <div class=\"helpContainer\"></div> </div> </div> <div class=\"window\" id=\"cmdContainer\"> <div style=\"display: block;\"><h3>Console Log</h3></div> <div class=\"consoleWindow\" id=\"consoleWindowCont\"></div> <div class=\"con_info\">Click <label class=\"ckere\" onclick=\"closeConsole();\">here</label> to close this window. After you close, the page will automatically reload in 2 seconds</div> </div> </div> ";
+  </div> <div style=\"display: block;width:100%\"><h2>SmartBin</h2></div> <div class=\"pinContainer\"> <form method=\"POST\" action=\"\" enctype=\"multipart/form-data\" id=\"upload_form\"> <input type=\"file\" name=\"update\" id=\"file\" onchange=\"sub(this)\" style=\"display:none\"> <label id=\"file-input\" for=\"file\"> Choose file...</label> <input type=\"submit\" class=\"btn\" id=\"btn\" value=\"Upload\" disabled> <br><br> <div id=\"prg\"></div> <div id=\"prgbar\"> <div id=\"bar\"></div> </div> </form> </div> <div class=\"helpContainer\"></div> </div> </div></div> <div class=\"window\" id=\"cmdContainer\"> <div style=\"display: block;\"><h3>Console Log</h3></div> <div class=\"consoleWindow\" id=\"consoleWindowCont\"></div> <div class=\"con_info\">Click <label class=\"ckere\" onclick=\"closeConsole();\">here</label> to close this window. After you close, the page will automatically reload in 2 seconds</div> </div>";
 String script = "<script> function closeConsole(){ document.getElementById(\"cmdContainer\").style.display=\"none\"; setTimeout(function(){ location.reload(); },3000); } function processResponse(res){ let ans=\"\"; for(i=0;i<res.length;i++){ if(res[i]==\" \"){ ans+=\"&nbsp;\"; } else if(res[i]==\"\\n\"){ ans+=\"<br>\"; } else{ ans+=res[i]; } } return ans; } function sub(obj){ var file = obj.files; if(file.length == 0){ alert(\"No file selected\"); return; } else { var name = file[0].name; var extensionList = name.split('.'); var extension = extensionList[extensionList.length-1].toLowerCase(); if(extension != \"hex\"){ alert(\"Only HEX files are accepted. Please choose a valid HEX file.\"); return; } } document.getElementById(\"file-input\").innerHTML = \" \"+ file[0].name; document.getElementById(\"btn\").disabled = false; }; document.getElementById(\"upload_form\").onsubmit = function(event) { event.preventDefault(); let files = document.getElementById(\"file\").files; let file = files[0]; let formData = new FormData(); formData.append('file', file); console.log(formData); let xmlhttp=\"\"; if(window.XMLHttpRequest) { xmlhttp=new XMLHttpRequest(); } else { xmlhttp=new ActiveXObject(\"Microsoft.XMLHTTP\"); } xmlhttp.onreadystatechange = function() { if (xmlhttp.readyState == 4) { if (xmlhttp.status == 200) { console.log(xmlhttp.responseText); document.getElementById(\"prg\").innerHTML = \"Uploaded Succesfully\"; document.getElementById(\"cmdContainer\").style.display=\"block\"; document.getElementById(\"consoleWindowCont\").innerHTML=processResponse(xmlhttp.responseText); } else if (xmlhttp.status == 0) { alert(\"Server closed the connection abruptly!\"); setTimeout(function(){ alert(\"Reloading Now...\"); location.reload(); },1500); } else { console.log(xmlhttp.status + \" Error!\\n\" + xmlhttp.responseText); document.getElementById(\"prg\").innerHTML = \"Error in Uploading\"; setTimeout(function(){ alert(\"Reloading Now...\"); location.reload(); },1500); } } }; xmlhttp.upload.addEventListener('progress', function(evt) { if (evt.lengthComputable) { let per = evt.loaded / evt.total; document.getElementById(\"prg\").innerHTML = \"Progress: \" + Math.round(per*100) + \"%\"; document.getElementById(\"bar\").style.width = Math.round(per*100) + \"%\"; } else{ console.log(\"Unable to compute progress information since the total size is unknown\"); } }); xmlhttp.open(\"POST\", \"upload\", true); xmlhttp.send(formData); } </script>";
 String end = " </body> </html>";
 
-String root(){ return start+style+body+script+end;}
+String getHeadTitle(String title){
+  return "<!doctype html>\n\
+            <html>\n\
+            <head>\n\
+                <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n\
+                <meta charset=\"UTF-8\">\n\
+                <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\
+                <title>"+title+"</title>";
+}
+
+String root(){ return getHeadTitle("FYP: SmartBin")+style+body+script+end;}
+
+String getLoginBody(String msg){
+  String err = "";
+  if(msg!=""){
+    err = "<div style=\"font-weight:bold;margin-bottom: 20px; text-align: center;color:red\">\n\
+             Error:&nbsp;&nbsp;<label style=\"font-weight:normal\">"+msg+"</label>\n\
+           </div>";
+  }
+  return "<body>\n\
+      <div style=\"padding: 10px 20px;margin-top:40px\">\n\
+        <div class=\"loginWrapper\" style=\"margin-left: auto;margin-right: auto;\">\n\
+            <div style=\"position: relative;margin: auto;width: 100%;\">\n\
+                <div style=\"display: block;width:100%\"><h2>Log In</h2></div>\n\
+                <div class=\"pinContainer\">\n"+err+"\
+                    <form method=\"POST\" action=\"/login\">\n\
+                        <input type=\"password\" name=\"PASSWORD\" placeholder=\"Enter Security Password\" autocomplete=\"off\">\n\
+                        <input type=\"submit\" class=\"btn\" id=\"btnSubmit\" value=\"Log In\">\n\
+                </form>\n\
+                </div>\n\
+            </div>\n\
+        </div>\n\
+      </div>\n\
+      <br>";
+}
+
+String getLoginPage(String msg){
+  return getHeadTitle("FYP: Login")+style+getLoginBody(msg)+end;
+}
 
 #endif
