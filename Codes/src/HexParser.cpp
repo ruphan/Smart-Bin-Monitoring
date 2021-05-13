@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include "HexParser.h"
 
+// Function to convert given ASCII value to HEX
 uint8_t Ascii2Hex(uint8_t c) {
   if (c >= '0' && c <= '9') { 
     return (uint8_t)(c - '0');  
@@ -14,7 +15,6 @@ uint8_t Ascii2Hex(uint8_t c) {
   }
   return 0;  
 }
-
 
 void Parser(uint8_t Start[], int Size, size_t * Length, uint8_t prog[]) { 
   /* DataB - no of bytes of actual data
@@ -29,7 +29,7 @@ void Parser(uint8_t Start[], int Size, size_t * Length, uint8_t prog[]) {
   int i;
   ptr=Start;
   for( i=0;i<Size;i++) {
-      if( *(ptr+i) == ':') {   //shows we have encountered a new record
+      if( *(ptr+i) == ':') {   // new record encountered
         Records+=1; 
         i++;
         
@@ -42,7 +42,7 @@ void Parser(uint8_t Start[], int Size, size_t * Length, uint8_t prog[]) {
         RecDB=(U*16 +L);
         DataB+=RecDB;
   
-        i+=6;            //to skip the address and record type fields
+        i+=6;             //to skip the address and record type fields
         
         //now extracting the record Data
         while(RecDB--) {         

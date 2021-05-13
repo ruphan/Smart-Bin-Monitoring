@@ -2,6 +2,7 @@
 
 struct device *D = new device();
 
+// Function to verify the signature against the valid AVRs supported
 String verifySignature(byte b[]) {
   String resp="Unrecognized device signature.";
   for (unsigned int i=0; i < length (signatures); i++) {

@@ -5,6 +5,7 @@
 #include<stdint.h>
 
 class SBSession{
+  // 10 random session msg digest.
   String SessionKeys[10] = {"eTL6mxjVE5uj35JtIvjwqMwxkf", "bzOV8kY4L8zAvhIKGOEp99MMxY", "SBmnE2C1tNwrLv4qX7QD3Sz2Rv", "HZTI7WAlGblxE2zDwo7UxFAtP1", "69ZHCSxAI0duiP1skerlklNVuL", 
                             "1f2DWFGp5WFh7f41umrJJPXRZu", "aQnOJ9z1QSV6bHloSDH1TMO84b", "WLfm7BqahusbpK90kBraC6n2U6", "LNiz7znfFyFtgxYY9StExUrKdU", "bD2HmNNlxbn07M8TJxm7fpiWaH"};
   int randSessionIndex;
@@ -14,11 +15,12 @@ class SBSession{
     String getKey(String);
 };
 
+// Function to select a random number from 0 to 9 (both inclusive)
 void SBSession::genKey(){
    randSessionIndex = (int)random(0,10);
 }
 
-
+// Function to generate the session key and return the hash
 String SBSession::getKey(String payload){
   String hashStr = SessionKeys[randSessionIndex];
   int append = strlen(payload.c_str()) % 256;
@@ -28,6 +30,7 @@ String SBSession::getKey(String payload){
   return hashStr;
 }
 
+// CSS style for all routes
 String style = "<style>\n\
                   * {\n\
                       box-sizing: border-box;position: relative;\n\
@@ -138,6 +141,8 @@ String style = "<style>\n\
                   }\n\
               </style>\n\
             </head>";
+
+// <Body> for root route
 String body = " <body> \n\
   <div style=\"padding:10px 50px\">\n\
     <a href=\"/login?LOGOUT=YES\">\n\
@@ -206,9 +211,13 @@ String body = " <body> \n\
     </g>\
   </svg>\
   </div> <div style=\"display: block;width:100%\"><h2>SmartBin</h2></div> <div class=\"pinContainer\"> <form method=\"POST\" action=\"\" enctype=\"multipart/form-data\" id=\"upload_form\"> <input type=\"file\" name=\"update\" id=\"file\" onchange=\"sub(this)\" style=\"display:none\"> <label id=\"file-input\" for=\"file\"> Choose file...</label> <input type=\"submit\" class=\"btn\" id=\"btn\" value=\"Upload\" disabled> <br><br> <div id=\"prg\"></div> <div id=\"prgbar\"> <div id=\"bar\"></div> </div> </form> </div> <div class=\"helpContainer\"></div> </div> </div></div> <div class=\"window\" id=\"cmdContainer\"> <div style=\"display: block;\"><h3>Console Log</h3></div> <div class=\"consoleWindow\" id=\"consoleWindowCont\"></div> <div class=\"con_info\">Click <label class=\"ckere\" onclick=\"closeConsole();\">here</label> to close this window. After you close, the page will automatically reload in 2 seconds</div> </div>";
+
+// <script> for rooot route
 String script = "<script> function closeConsole(){ document.getElementById(\"cmdContainer\").style.display=\"none\"; setTimeout(function(){ location.reload(); },3000); } function processResponse(res){ let ans=\"\"; for(i=0;i<res.length;i++){ if(res[i]==\" \"){ ans+=\"&nbsp;\"; } else if(res[i]==\"\\n\"){ ans+=\"<br>\"; } else{ ans+=res[i]; } } return ans; } function sub(obj){ var file = obj.files; if(file.length == 0){ alert(\"No file selected\"); return; } else { var name = file[0].name; var extensionList = name.split('.'); var extension = extensionList[extensionList.length-1].toLowerCase(); if(extension != \"hex\"){ alert(\"Only HEX files are accepted. Please choose a valid HEX file.\"); return; } } document.getElementById(\"file-input\").innerHTML = \" \"+ file[0].name; document.getElementById(\"btn\").disabled = false; }; document.getElementById(\"upload_form\").onsubmit = function(event) { event.preventDefault(); let files = document.getElementById(\"file\").files; let file = files[0]; let formData = new FormData(); formData.append('file', file); console.log(formData); let xmlhttp=\"\"; if(window.XMLHttpRequest) { xmlhttp=new XMLHttpRequest(); } else { xmlhttp=new ActiveXObject(\"Microsoft.XMLHTTP\"); } xmlhttp.onreadystatechange = function() { if (xmlhttp.readyState == 4) { if (xmlhttp.status == 200) { console.log(xmlhttp.responseText); document.getElementById(\"prg\").innerHTML = \"Uploaded Succesfully\"; document.getElementById(\"cmdContainer\").style.display=\"block\"; document.getElementById(\"consoleWindowCont\").innerHTML=processResponse(xmlhttp.responseText); } else if (xmlhttp.status == 0) { alert(\"Server closed the connection abruptly!\"); setTimeout(function(){ alert(\"Reloading Now...\"); location.reload(); },1500); } else { console.log(xmlhttp.status + \" Error!\\n\" + xmlhttp.responseText); document.getElementById(\"prg\").innerHTML = \"Error in Uploading\"; setTimeout(function(){ alert(\"Reloading Now...\"); location.reload(); },1500); } } }; xmlhttp.upload.addEventListener('progress', function(evt) { if (evt.lengthComputable) { let per = evt.loaded / evt.total; document.getElementById(\"prg\").innerHTML = \"Progress: \" + Math.round(per*100) + \"%\"; document.getElementById(\"bar\").style.width = Math.round(per*100) + \"%\"; } else{ console.log(\"Unable to compute progress information since the total size is unknown\"); } }); xmlhttp.open(\"POST\", \"upload\", true); xmlhttp.send(formData); } </script>";
+
 String end = " </body> </html>";
 
+// Function to get the the header of <html> based on route
 String getHeadTitle(String title){
   return "<!doctype html>\n\
             <html>\n\
@@ -219,8 +228,10 @@ String getHeadTitle(String title){
                 <title>"+title+"</title>";
 }
 
+// Full root route page
 String root(){ return getHeadTitle("FYP: SmartBin")+style+body+script+end;}
 
+// <body> for login route
 String getLoginBody(String msg){
   String err = "";
   if(msg!=""){
@@ -245,6 +256,7 @@ String getLoginBody(String msg){
       <br>";
 }
 
+// Full login page
 String getLoginPage(String msg){
   return getHeadTitle("FYP: Login")+style+getLoginBody(msg)+end;
 }

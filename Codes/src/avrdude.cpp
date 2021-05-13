@@ -1,24 +1,10 @@
 #include "avrdude.h"
 
-// ========================  Utility function's definition starts =================================
-/*
- * Serial omits HEX numbers starting from 0. Ex: 0A will be 
- * printed as A. Hence, to avoid confusion, this function 
- * prints the HEX in its actual 8 bytes format.
-*/
-void showHEX(const byte B){
-  if(B<16){
-    Serial.print(F("0"));
-  }
-  Serial.print(B,HEX);
-}
-// ========================  Utility function's definition ends =================================
-
 // ========================  Avrdude class member function definition starts =================================
-// ==============================  Helper function's definition starts =================================
+// ==============================  Helper functions definition starts =================================
 /*
  * Send active low RESET signal on PIN 21 of the ESP32.
- * Pulse is held low for 200ms
+ * Pulse is held low for 200us
 */
 void Avrdude::ResetExtDevice() {
   pinMode(5, OUTPUT);
@@ -54,21 +40,20 @@ void Avrdude::Done(){
   Serial.println(F("\navrdude done. Thank you."));
   response += "\navrdude done. Thank you.";
 }
-// ==============================  Helper function's definition ends =================================
-// ==============================  Essential function's definition ends =================================
+// ==============================  Helper functions definition ends =================================
+// ==============================  Essential functions definition ends =================================
 /*
- * Function to initialise avrdude process. Initallise Serial comm on PIN RX0, TX0
+ * Function to initialise avrdude process. Initiallise Serial comm on PIN RX0, TX0
  * for debugging and verbose output. Serial2 i.e, RX2 and TX2 communicates with the UART 
- * for the connected uC. Appropriate BAUDRATE is selected basd on the uC. 
+ * for the connected uC. Appropriate BAUDRATE is selected based on the uC. 
 */
-String Avrdude::begin(long baudRate, String file, uint8_t *pg, size_t len){
+String Avrdude::begin(String file, uint8_t *pg, size_t len){
   response = "";
   details.fileName = file;
   details.progData = pg;
   details.len = len;
-  // Initialising Serial comm. 
-  Serial.begin(baudRate);
-  Serial2.begin(baudRate, SERIAL_8N1, RXD2, TXD2);
+  // Clearing serial line. 
+  Serial2.flush();Serial2.flush();Serial2.flush();
   // Printing basic info first
   String stmnt = "\navrdude: Version "+String(_MAJOR_VERSION_)+"."+String(_MINOR_VERSION_)+"."+String(_SUB_MINOR_VERSION_);
   Serial.println(F(stmnt.c_str()));
@@ -85,7 +70,7 @@ String Avrdude::begin(long baudRate, String file, uint8_t *pg, size_t len){
 }
 
 /*
- * Synchrise with the device first. Sends STK_GET_SYNC CRC_EOP 
+ * Synchronise with the device first. Sends STK_GET_SYNC CRC_EOP 
  * and waits for response. If correct response is received, sends the
  * same things 2 more times two confirm the synchronisation with the device. 
 */
@@ -105,6 +90,7 @@ void Avrdude::syncAVR(){
     }   // Program will come here when it has received the data.
     // Read the incoming data 
     byte res1 = Serial2.read();
+    while(!Serial2.available());
     byte res2 = Serial2.read();
     if( res1 == STK_INSYNC && res2 == STK_OK){                           // If response is correct 
       //Confirming the synchronisation for the second time, repeats the same procedure
@@ -115,6 +101,7 @@ void Avrdude::syncAVR(){
       // response this time will come instantly.
       while(!Serial2.available());                                      
       byte res1 = Serial2.read();
+      while(!Serial2.available());
       byte res2 = Serial2.read();
       if( res1 == STK_INSYNC && res2 == STK_OK){
         //Confirming one last Time for the synchronisation 
@@ -123,6 +110,7 @@ void Avrdude::syncAVR(){
         Serial2.write((byte)CRC_EOP);
         while(!Serial2.available());
         byte res1 = Serial2.read();
+        while(!Serial2.available());
         byte res2 = Serial2.read();
         if( res1 == STK_INSYNC && res2 == STK_OK){
           //Confirmed 3 times. avrdude and device in sync
@@ -163,7 +151,9 @@ void Avrdude::readDevice(){
     Serial2.write((byte)CRC_EOP);
     while(!Serial2.available());
     byte res1 = Serial2.read();
+    while(!Serial2.available());
     byte res2 = Serial2.read();                     // We will just read the version
+    while(!Serial2.available());
     byte res3 = Serial2.read();
     if(res1 ==  STK_INSYNC && res3 == STK_OK){      // If response is correct 
       Serial.print(F("######"));
@@ -176,7 +166,9 @@ void Avrdude::readDevice(){
         Serial2.write((byte)CRC_EOP);
         while(!Serial2.available());
         byte res1 = Serial2.read();
-        byte res2 = Serial2.read();                 // We will just read the version
+        while(!Serial2.available());
+        byte res2 = Serial2.read();                 // Just read the version
+        while(!Serial2.available());
         byte res3 = Serial2.read();
         if(res1 ==  STK_INSYNC && res3 == STK_OK){  // If the response is correct 
           Serial.print(F("#####"));
@@ -188,6 +180,7 @@ void Avrdude::readDevice(){
             Serial2.write((byte)CRC_EOP);
             while(!Serial2.available());
             byte res1 = Serial2.read();
+            while(!Serial2.available());
             byte res2 = Serial2.read();
             if(res1 ==  STK_INSYNC && res3 == STK_OK){       // If correcct response 
               Serial.print(F("####"));
@@ -198,8 +191,8 @@ void Avrdude::readDevice(){
                 Serial2.write((byte)STK_READ_SIGN);
                 Serial2.write((byte)CRC_EOP);
                 while(!Serial2.available());
-                byte res1 = Serial2.read();byte res2 = Serial2.read();
-                byte res3 = Serial2.read();byte res4 = Serial2.read();
+                byte res1 = Serial2.read();while(!Serial2.available());byte res2 = Serial2.read();while(!Serial2.available());
+                byte res3 = Serial2.read();while(!Serial2.available());byte res4 = Serial2.read();while(!Serial2.available());
                 byte res5 = Serial2.read();
                 if(res1 ==  STK_INSYNC && res5 == STK_OK){      // If correct response 
                   Serial.print(F("########## | 100% ("));
@@ -266,7 +259,7 @@ void Avrdude::writeFlash(){
   response += "avrdude: Writing flash (" + String(details.len) +" bytes):\n";
   unsigned long startTime = millis();
   RW("Writing");
-  uint16_t pageSize = details.pageSize;
+  uint16_t pageSize = details.pageSize;                              // Get the page size based on uC
   uint16_t address = 0x0000;
   Serial.print(F("###########"));
   response += "###########";
@@ -282,7 +275,7 @@ void Avrdude::writeFlash(){
     Serial2.write((byte)addrH);
     Serial2.write((byte)CRC_EOP);
     while(!Serial2.available());
-    byte res1 = Serial2.read();
+    byte res1 = Serial2.read();while(!Serial2.available());
     byte res2 = Serial2.read();
     if(res1 ==  STK_INSYNC && res2 == STK_OK){    // If load address was succesfull 
       Serial2.flush();
@@ -365,6 +358,7 @@ void Avrdude::verifyFlash(){
     Serial2.write((byte)CRC_EOP);
     while(!Serial2.available());
     byte res1 = Serial2.read();
+    while(!Serial2.available());
     byte res2 = Serial2.read();
     if(res1 ==  STK_INSYNC && res2 == STK_OK){
       Serial2.flush();
@@ -439,10 +433,11 @@ void Avrdude::exitPgmMode(){
     Serial2.write((byte)CRC_EOP);
     while(!Serial2.available());
     byte res1 = Serial2.read();
+    while(!Serial2.available());
     byte res2 = Serial2.read();
     if(res1 == STK_INSYNC && res2 == STK_OK){
          // Command executed succesfully 
-         //we do nothing
+         // Ignore
     }
     else{
       Verbose(String("Error: STK_LEAVE_PROGMODE. Failed to leave programming mode. Expected 0x"+hexTOstring(STK_INSYNC)+" 0x"+hexTOstring(STK_OK)+" but, got 0x"+hexTOstring(res1)+" 0x"+hexTOstring(res2)).c_str());

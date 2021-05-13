@@ -45,10 +45,7 @@ class Avrdude{
     void verifyFlash();                                       // Verify the written flash for any errors
     void exitPgmMode();                                       // After verifying, exit the programming mode
   public:
-    String begin(long, String, uint8_t*, size_t);             // initializer. Process starts here
+    String begin(String, uint8_t*, size_t);             // initializer. Process starts here
 };
-
-/* Other Uitility functions */
-void showHEX(const byte);                                     // Print the HEX number properly on monitor/console
 
 #endif
