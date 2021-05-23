@@ -112,6 +112,8 @@ def matlab(data, DB_id, prediction):
     else:
         finalFillDate = prediction[len(prediction)-1]["predictedTime"]
 
+    finalFillDate = 3
+
     # Plotting the data using Matplotlib
     fig, (ax1, ax2) = plt.subplots(2, sharex=True)
     ax1.plot(dates, weight, 'tab:red', marker='o')

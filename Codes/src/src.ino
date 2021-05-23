@@ -69,7 +69,7 @@ int file_index = 0;
 String fileName = "";
 
 /* Global declarations for ThingSpeak IoT Cloud Platform */
-long prevMillisThingSpeak = 0;
+long long prevMillisThingSpeak = 0;
 int intervalThingSpeak = 20000;                                   // Milli-seconds after which data should be sent to ThingSpeak server
 
 /* Global declaration for data expected from Microcontroller */
@@ -392,22 +392,26 @@ void readDataFromMicroController() {
     for(int i=16;i>=0;i--){
       curr_ir += (currentIR >> i ) & 0x01;
     }
-    // Log the data to ThingsSpeak Server
-    Serial.println("\nThingSpeak: Attempting to log the data...");
-    ThingSpeak.setField(1, DB_ID);                             // DB_ID Field
-    ThingSpeak.setField(2, String(_VERSION_));                 // Version field
-    ThingSpeak.setField(3, String((int)currentWeight/1000));             // Current Weight field
-    ThingSpeak.setField(4, curr_ir);                           // Current IR field
-    ThingSpeak.setField(5, String((int)thresholdWeight/1000));           // Threshold Weight field
-    ThingSpeak.setField(6, String(thresholdIR));               // Threshold IR field
-    
-    // Write to the ThingSpeak channel
-    int x = ThingSpeak.writeFields(CHANNEL, WRITE_API);
-    if (x == 200) {
-      Serial.println("ThingSpeak: Channel update successful.");
-    }
-    else {
-      Serial.println("ThingSpeak: Problem updating channel. HTTP error code " + String(x));
+
+    if(millis() - prevMillisThingSpeak >= intervalThingSpeak) {
+      // Log the data to ThingsSpeak Server
+      Serial.println("\nThingSpeak: Attempting to log the data...");
+      ThingSpeak.setField(1, DB_ID);                             // DB_ID Field
+      ThingSpeak.setField(2, String(_VERSION_));                 // Version field
+      ThingSpeak.setField(3, String((int)currentWeight/1000));             // Current Weight field
+      ThingSpeak.setField(4, curr_ir);                           // Current IR field
+      ThingSpeak.setField(5, String((int)thresholdWeight/1000));           // Threshold Weight field
+      ThingSpeak.setField(6, String(thresholdIR));               // Threshold IR field
+      
+      // Write to the ThingSpeak channel
+      int x = ThingSpeak.writeFields(CHANNEL, WRITE_API);
+      if (x == 200) {
+        Serial.println("ThingSpeak: Channel update successful.");
+      }
+      else {
+        Serial.println("ThingSpeak: Problem updating channel. HTTP error code " + String(x));
+      }
+      prevMillisThingSpeak = millis();
     }
   }
   else{

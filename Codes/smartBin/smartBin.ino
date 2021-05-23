@@ -9,6 +9,10 @@ float calibration_factor = 48100; // this calibration factor is adjusted accordi
 
 uint16_t currentWeight = 0x0000;
 uint16_t currentIR = 0x0000;
+
+uint16_t prevWeight = 0x0000;
+uint16_t prevIR = 0x0000;
+
 uint16_t thresholdWeight = 0x1388;                          // 50kgs 
 uint16_t thresholdIR = 0x0000;
 
@@ -93,14 +97,23 @@ void setup() {
   pinMode(12,INPUT);
 
   // innitialization for weight sensor
-
   scale.set_scale();
   scale.tare();
+
+  // Read and send the data after power up
+  currentWeight = getWeight();
+  currentIR = 0x0000 | getIRReading();
+  prevWeight = currentWeight;
+  prevIR = currentIR;
+  bool res = sendDataToESP();
 }
 
 void loop() {
   currentWeight = getWeight();
   currentIR = 0x0000 | getIRReading();
-  bool res = sendDataToESP();
-  delay(15000);
+  if(currentWeight != prevWeight || currentIR != prevIR){
+    bool res = sendDataToESP(); 
+    prevWeight = currentWeight;
+    prevIR = currentIR;
+  }
 }
